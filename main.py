@@ -1,5 +1,14 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    jsonify,
+    session,
+)
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
@@ -12,9 +21,9 @@ from flask_login import (
     logout_user,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Float, Numeric
+from sqlalchemy import Integer, String, Numeric, inspect
 from sqlalchemy.exc import SQLAlchemyError
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from datatables import ColumnDT, DataTables
 import json
 from pathlib import Path
@@ -83,6 +92,21 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# Converts an SQLAlchemy object to dictionary
+def object_as_dict(obj):
+    return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+
+def make_decimal(dict):
+    """Converts all numeric values in a dictionary to a Decimal type"""
+    for key, value in dict.items():
+        try:
+            value = Decimal(value)
+        except (ValueError, DecimalException):
+            pass
+    return dict
+
+
 def process_json(file_path):
     filename = Path(file_path).stem
     with open(file_path) as file:
@@ -91,26 +115,30 @@ def process_json(file_path):
     # Calculate Eg
     data["Eg"] = data["LUMO"] - data["HOMO"]
     # Calculate Qpi
-    ## add later
+    Q_pi = data["Quadrupole"]["ZZ"] * 0.743 * 3
     # Prepare data
-    new_data = QC_data(
+    data_to_add = QC_data(
         qc_name=filename,
         HOMO=data["HOMO"],
         LUMO=data["LUMO"],
         Eg=data["Eg"],
         Energy=data["SCF Energy"],
         Dipole=data["Dipole"]["Tot"],
-        Quadrupole=data["Quadrupole"]["ZZ"],  # change later
+        Quadrupole=Q_pi,
     )
-    db.session.add(new_data)
+    db.session.add(data_to_add)
     try:
         db.session.commit()
     except SQLAlchemyError as e:
         error = str(e.__dict__["orig"])
         if "UNIQUE" in error:
-            error = "Name already exists: " + error
+            error = f'Name "{data_to_add.qc_name}" already exists:'
         print(f"ERROR: {error}")
         flash(error)
+        new_data = object_as_dict(data_to_add)
+        print(new_data)
+        session["new_data"] = new_data
+        return error
     return
 
 
@@ -232,14 +260,20 @@ def upload():
             filename = secure_filename(file.filename)
             file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(file_path)
-            process_json(file_path)
-            return redirect(url_for("home"))
+            error = process_json(file_path)
+            if error:
+                # If error encountered
+                return redirect(url_for("compare"))
+            else:
+                return redirect(url_for("home"))
     return render_template("upload.html")
 
 
 @app.route("/add", methods=["GET", "POST"])
 def add():
     if request.method == "POST":
+        ## ToDo
+        # Convert to dict and parse through a formatting function
         _qc_name = request.form["qc_name"]
         _HOMO = Decimal(request.form["HOMO"])
         _LUMO = Decimal(request.form["LUMO"])
@@ -263,23 +297,21 @@ def add():
 def edit():
     if request.method == "POST":
         # UPDATE RECORD
+        new_data = {}
         data_id = request.form["id"]
         data_to_update = db.get_or_404(QC_data, data_id)
-        if request.form["qc_name"] != "":
-            print("Updating Name")
-            data_to_update.qc_name = request.form["qc_name"]
-        if request.form["HOMO"] != "":
-            print("Updating HOMO")
-            data_to_update.HOMO = Decimal(request.form["HOMO"])
-            data_to_update.Eg = data_to_update.LUMO - data_to_update.HOMO
-        if request.form["LUMO"] != "":
-            print("Updating LUMO")
-            data_to_update.LUMO = Decimal(request.form["LUMO"])
-            data_to_update.Eg = data_to_update.LUMO - data_to_update.HOMO
-        if request.form["Energy"] != "":
-            print("Updating Energy")
-            data_to_update.Energy = Decimal(request.form["Energy"])
+        form_data = request.form.to_dict()
+        print(form_data)
+        for key, value in form_data.items():
+            if value != "":
+                new_data[key] = value
+        # Convert to correct data type for database
+        make_decimal(new_data)
+        # Write updated values to database
+        for key, value in new_data.items():
+            setattr(data_to_update, key, value)
         db.session.commit()
+        db.session.flush()
         return redirect(url_for("home"))
     if current_user.is_authenticated:
         data_id = request.args.get("id")
@@ -288,6 +320,21 @@ def edit():
     else:
         flash("Please authenticate to edit data.")
         return redirect(url_for("login"))
+
+
+@app.route("/compare", methods=["GET", "POST"])
+@login_required
+def compare():
+    if request.method == "POST":
+        return redirect(url_for("home"))
+    data_to_add = session["new_data"]
+    if data_to_add == {}:
+        existing_data = {}
+    else:
+        existing_data = QC_data.query.filter_by(qc_name=data_to_add["qc_name"]).scalar()
+    return render_template(
+        "compare.html", existing_data=existing_data, data_to_add=data_to_add
+    )
 
 
 @app.route("/delete")
@@ -300,6 +347,31 @@ def delete():
     db.session.delete(data_to_delete)
     db.session.commit()
     return redirect(url_for("home"))
+
+
+@app.route("/update_or_ignore", methods=["POST"])
+def update_or_ignore():
+    if "keep_data" in request.form:
+        # Keep existing data, remove temp data
+        # Clear session data
+        session["new_data"] = {}
+        return redirect(url_for("home"))
+    if "replace_data" in request.form:
+        # Replace existing data with new data
+        new_data = session["new_data"]
+        del new_data["id"]
+        # Calculate Eg
+        new_data["Eg"] = new_data["LUMO"] - new_data["HOMO"]
+        # Get existing data
+        existing_data = QC_data.query.filter_by(qc_name=new_data["qc_name"]).first()
+        # Convert to correct data types for the database
+        data_to_add = make_decimal(new_data)
+        # Update each column for the existing data
+        for key, value in data_to_add.items():
+            setattr(existing_data, key, value)
+        db.session.commit()
+        db.session.flush()
+        return redirect(url_for("home"))
 
 
 if __name__ == "__main__":
