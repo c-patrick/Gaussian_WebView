@@ -1,0 +1,48 @@
+{% include 'base.html' %}
+
+{% block head %}
+<link href="https://cdn.datatables.net/1.10.10/css/jquery.dataTables.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="col-auto">
+    <h1 class="text-center" style="margin-top: 20px; margin-bottom: 40px;">Quantum Chemical Data</h1>
+    <div class="alert alert-light text-center" role="alert">
+      Return to table?
+      <a type="button" class="btn btn-primary btn-sm mx-2" href="{{ url_for('main.index') }}">Return</a>
+    </div>
+    <table id="dt" class="table table-striped table-hover table-responsive text-center align-middle">
+      <thead>
+        <tr>
+        <tr>
+          <th>Name</th>
+          <th>HOMO<br>(eV)</th>
+          <th>LUMO<br>(eV)</th>
+          <th>Eg<br>(eV)</th>
+          <th>Energy<br>(Hartree)</th>
+          <th>Dipole</th>
+          <th>Quadrupole</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_javascripts %}
+<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.10/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function () {
+    var table = $('#dt').DataTable({
+      "processing": true,
+      "serverSide": true,
+      "ajax": "{{ url_for('dt.data') }}"
+    });
+  });
+</script>
+
+{% endblock %}
