@@ -82,4 +82,10 @@ def create_app(config_class=Config):
     from app.secret import bp as secret_bp
 
     app.register_blueprint(secret_bp, url_prefix="/secret")
+
+    # User Management (Admin Only)
+    from app.users import bp as users_bp
+
+    app.register_blueprint(users_bp, url_prefix="/users")
+
     return app

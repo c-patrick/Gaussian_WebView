@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block head %}
+<script>
+    $(document).ready(function(){
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container justify-content-center">
+    <div class="col-auto">
+        <h1 class="text-center" style="margin-top: 20px; margin-bottom: 40px;">Manage Users</h1>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        {% if data == []: %}
+        <p>No data available. Add data below.</p>
+        {% else: %}
+        <table class="table table-striped table-hover table-responsive text-center align-middle">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in data %}
+                <tr>
+                    <td scope="row">{{user.name}}</td>
+                    <td scope="row">{{user.email}}</td>
+                    <td scope="row">{{user.role}}</td>
+                    <td scope="row">
+                        <a class="btn btn-primary" href="{{ url_for('edit.index', type='user', id=user.id) }}"
+                            role="button">Edit</a>
+                        {% if user.id == 1: %}
+                        <span class="d-inline-block" data-toggle="tooltip" data-trigger="hover" tabindex="0" title="The first user cannot be removed">
+                            <button class="btn btn-danger" style="pointer-events: none;" type="button" disabled>Delete</button>
+                        </span>
+                        <!-- <a class="btn btn-danger disabled" href="{{ url_for('delete.index', type='user', id=user.id) }}"
+                            role="button">Delete</a> -->
+                        {% else: %}
+                        <a class="btn btn-danger" href="{{ url_for('delete.index', type='user', id=user.id) }}"
+                            role="button">Delete</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

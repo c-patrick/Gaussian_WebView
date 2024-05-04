@@ -11,24 +11,40 @@ from app.models.user import User
 @bp.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        email = request.form.get("email")
-        result = db.session.execute(db.select(User).where(User.email == email))
-        user = result.scalar()
+        role = ""
+        # If table is empty, make first user superadmin
+        if not db.session.query(User).first():
+            role = "superadmin"
+        # Check if email exists
+        else:
+            email = request.form.get("email")
+            result = db.session.execute(db.select(User).where(User.email == email))
+            user = result.scalar()
 
-        if user:
-            # If user exists
-            flash("You've already signed up with that email. Try logging in.")
-            return redirect(url_for("login.index"))
+            if user:
+                # If user exists
+                flash("You've already signed up with that email. Try logging in.")
+                return redirect(url_for("login.index"))
 
         hashed_salted_password = generate_password_hash(
             request.form.get("password"), method="pbkdf2:sha256", salt_length=8
         )
-        new_user = User(
-            email=request.form.get("email"),
-            password=hashed_salted_password,
-            name=request.form.get("name"),
-            email_confirmed_at=datetime.datetime.now(),
-        )
+        # If first user, make superadmin
+        if role == "superadmin":
+            new_user = User(
+                email=request.form.get("email"),
+                password=hashed_salted_password,
+                name=request.form.get("name"),
+                email_confirmed_at=datetime.datetime.now(),
+                role=role,
+            )
+        else:
+            new_user = User(
+                email=request.form.get("email"),
+                password=hashed_salted_password,
+                name=request.form.get("name"),
+                email_confirmed_at=datetime.datetime.now(),
+            )
         db.session.add(new_user)
         db.session.commit()
         login_user(new_user)

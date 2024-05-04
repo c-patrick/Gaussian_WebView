@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container">
+  {% if data_type == "qc_data": %}
   <h1 class="text-center" style="margin-top: 20px; margin-bottom: 40px;">Edit Data</h1>
   <form action="{{ url_for('edit.index') }}" method="POST">
     <input class="form-control" hidden="hidden" name="id" value="{{data.id}}" />
@@ -62,7 +63,52 @@
         </tr>
       </tbody>
     </table>
-    <button class="btn btn-primary w-100" type="submit">Update</button>
+    <button class="btn btn-primary w-100" name="qc_data-submit" type="submit">Update</button>
   </form>
+  {% endif %}
+  {% if data_type == "user": %}
+  <h1 class="text-center" style="margin-top: 20px; margin-bottom: 40px;">Edit User</h1>
+  <form action="{{ url_for('edit.index') }}" method="POST">
+    <input class="form-control" hidden="hidden" name="id" value="{{data.id}}" />
+    <table class="table table-striped table-hover table-responsive text-center align-middle">
+      <thead>
+        <tr>
+          <th scope="col">Parameter</th>
+          <th scope="col">Current Value</th>
+          <th scope="col">New Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td scope="row">Name</td>
+          <td scope="row">{{data.name}}</td>
+          <td>
+            <input class="form-control" name="name" type="text" placeholder="New Value" />
+          </td>
+        </tr>
+        <tr>
+          <td scope="row">Email</td>
+          <td scope="row">{{data.email}}</td>
+          <td>
+            <input class="form-control" name="email" type="text" placeholder="New Value" />
+          </td>
+        </tr>
+        <tr>
+          <td scope="row">Role</td>
+          <td scope="row">{{data.role}}</td>
+          <td>
+            <select class="form-select" name="role" aria-label="Select">
+              <option selected disabled>Select</option>
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+              <option value="superadmin">superadmin</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn btn-primary w-100" name="user-submit" type="submit">Update</button>
+  </form>
+  {% endif %}
 </div>
 {% endblock %}

@@ -23,6 +23,7 @@
                         <a class="nav-link active" aria-current="page" href="{{ url_for('main.index') }}">Home</a>
                         {% if is_admin: %}
                         <a class="nav-link active" aria-current="page" href="{{ url_for('secret.index') }}">Secret</a>
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('users.index') }}">User Management</a>
                         {% endif %}
                     </div>
                 </div>

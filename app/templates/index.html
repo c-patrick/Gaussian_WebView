@@ -48,9 +48,9 @@
                     <td scope="row">{{molecule.Quadrupole}}</td>
                     {% if logged_in %}
                     <td scope="row">
-                        <a class="btn btn-primary" href="{{ url_for('edit.index', id=molecule.id) }}"
+                        <a class="btn btn-primary" href="{{ url_for('edit.index', type='qc_data', id=molecule.id) }}"
                             role="button">Edit</a>
-                        <a class="btn btn-danger" href="{{ url_for('delete.index', id=molecule.id) }}"
+                        <a class="btn btn-danger" href="{{ url_for('delete.index', type='qc_data', id=molecule.id) }}"
                             role="button">Delete</a>
                     </td>
                     {% endif %}
