@@ -1,13 +1,5 @@
 {% extends "base.html" %}
 
-{% block head %}
-<script>
-    $(document).ready(function(){
-      $('[data-toggle="tooltip"]').tooltip();
-    });
-</script>
-{% endblock %}
-
 {% block content %}
 
 <div class="container justify-content-center">
@@ -45,8 +37,9 @@
                         <a class="btn btn-primary" href="{{ url_for('edit.index', type='user', id=user.id) }}"
                             role="button">Edit</a>
                         {% if user.id == 1: %}
-                        <span class="d-inline-block" data-toggle="tooltip" data-trigger="hover" tabindex="0" title="The first user cannot be removed">
-                            <button class="btn btn-danger" style="pointer-events: none;" type="button" disabled>Delete</button>
+                        <span class="d-inline-block" data-bs-toggle="tooltip" data-placement="right" tabindex="0"
+                            title="The first user cannot be removed">
+                            <button class="btn btn-danger" type="button" disabled>Delete</button>
                         </span>
                         <!-- <a class="btn btn-danger disabled" href="{{ url_for('delete.index', type='user', id=user.id) }}"
                             role="button">Delete</a> -->
@@ -62,5 +55,13 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Enable tooltips -->
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
 
 {% endblock %}
