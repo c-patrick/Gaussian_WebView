@@ -88,4 +88,9 @@ def create_app(config_class=Config):
 
     app.register_blueprint(users_bp, url_prefix="/users")
 
+    # Plot data
+    from app.chart import bp as chart_bp
+
+    app.register_blueprint(chart_bp, url_prefix="/chart")
+
     return app

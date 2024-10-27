@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha512-UXumZrZNiOwnTcZSHLOfcTs0aos2MzBWHXOHOuB0J/R44QB0dwY5JgfbvljXcklVf65Gc4El6RjZ+lnwd2az2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.js" integrity="sha512-KacxtjMxwPjZfLXBoEAm2bKEzpZg71vwjVz4PTBuo/hEaijtBsrEwiWBXc+gC09Akd3lqeqMlOMMKNe1L3koRw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %}
+
+{% block content %}
+
+{% if flags["IR"] == True %}
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
+    <!-- Correct for plurality -->
+    {% if data|length == 1 %}
+    <h2 class="text-center" style="margin-top: 30px; margin-bottom: 10px;">IR Spectrum</h2>
+    {% else %}
+    <h2 class="text-center" style="margin-top: 30px; margin-bottom: 10px;">IR Spectra</h2>
+    {% endif %}
+    <canvas id="IR_Chart" width="800" height="400"></canvas>
+    <button class="btn btn-secondary" onclick="resetZoom_IR()">Reset Zoom</button>
+  </div>
+  <div class="col-md-2"></div>
+</div>
+
+<script>
+  var ctx = document.getElementById('IR_Chart').getContext('2d');
+  var zoomOptions = {
+    limits: {
+      x: {min: -200, max: 4500, minRange: 50},
+      y: {min: -1, max: 20, minRange: 5}
+    },
+    pan: {
+      enabled: true,
+      mode: 'xy',
+    },
+    zoom: {
+      wheel: {
+        enabled: true,
+      },
+      pinch: {
+        enabled: true
+      },
+      mode: 'xy',
+      onZoomComplete({chart}) {
+        // This update is needed to display up to date zoom level in the title.
+        // Without this, previous zoom level is displayed.
+        // The reason is: title uses the same beforeUpdate hook, and is evaluated before zoom.
+        chart.update('none');
+      }
+    }
+  };
+  var chartData = {
+    datasets: [
+      {% for itemData in data %}
+        {% if "IR" in itemData %}
+          {
+            label: "{{ itemData["name"] }}",
+            data: [
+              {% for datapoint in itemData["IR"] %}
+              {
+                x: {{ datapoint["x"] }},
+                y: {{ datapoint["y"] }}
+              },
+              {% endfor %}
+            ],
+          },
+        {% endif %}
+      {% endfor %}
+    ]
+  };
+  var IR_Chart = new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: {
+            display: true,
+            text: 'Wavenumber (cm-1)'
+          },
+          grid: {
+            drawOnChartArea: true,
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'IR Intensity (a.u.)'
+          },
+        },
+      },
+      elements: {
+          point:{
+              radius: 0
+          }
+      },
+      plugins: {
+        zoom: zoomOptions
+      }
+    },
+  });
+
+  function resetZoom_IR() {
+    IR_Chart.resetZoom();
+  }
+</script>
+{% endif %}
+
+
+{% if flags["ES"] == True %}
+<div class="row">
+  <div class="col-md-2"><!-- form/results will go here --></div>
+  <div class="col-md-8">
+    <!-- Correct for plurality -->
+    {% if data|length == 1 %}
+    <h2 class="text-center" style="margin-top: 30px; margin-bottom: 10px;">UV-vis Spectrum</h2>
+    {% else %}
+    <h2 class="text-center" style="margin-top: 30px; margin-bottom: 10px;">UV-vis Spectra</h2>
+    {% endif %}
+    <canvas id="ES_Chart" width="800" height="400"></canvas>
+    <button class="btn btn-secondary" onclick="resetZoom_ES()">Reset Zoom</button>
+  </div>
+  <div class="col-md-2"></div>
+</div>
+
+<script>
+  var ctx_2 = document.getElementById('ES_Chart').getContext('2d');
+  var zoomOptions = {
+    limits: {
+      x: {min: -20, max: 2000, minRange: 50},
+      y: {min: -1, max: 25, minRange: 5}
+    },
+    pan: {
+      enabled: true,
+      mode: 'xy',
+    },
+    zoom: {
+      wheel: {
+        enabled: true,
+      },
+      pinch: {
+        enabled: true
+      },
+      mode: 'xy',
+      onZoomComplete({chart}) {
+        // This update is needed to display up to date zoom level in the title.
+        // Without this, previous zoom level is displayed.
+        // The reason is: title uses the same beforeUpdate hook, and is evaluated before zoom.
+        chart.update('none');
+      }
+    }
+  };
+  var chartData = {
+    datasets: [
+      {% for itemData in data %}
+        {% if "ES" in itemData %}
+          {
+            label: "{{ itemData["name"] }}",
+            data: [
+              {% for datapoint in itemData["ES"] %}
+              {
+                x: {{ datapoint["x"] }},
+                y: {{ datapoint["y"] }}
+              },
+              {% endfor %}
+            ],
+          },
+        {% endif %}
+      {% endfor %}
+    ]
+  };
+  var ES_Chart = new Chart(ctx_2, {
+    type: 'line',
+    data: chartData,
+    options: {
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: {
+            display: true,
+            text: 'Wavelength (nm)'
+          },
+          grid: {
+            drawOnChartArea: true,
+          },
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Oscillator Strength'
+          },
+        },
+      },
+      elements: {
+          point:{
+              radius: 0
+          }
+      },
+      plugins: {
+        zoom: zoomOptions
+      }
+    },
+  });
+
+  function resetZoom_ES() {
+    ES_Chart.resetZoom();
+  }
+</script>
+{% endif %}
+
+
+
+
+
+{% endblock %}

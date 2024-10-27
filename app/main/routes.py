@@ -9,7 +9,7 @@ from app.models.qc_data import QC_data
 def index():
     # READ ALL RECORDS
     # Construct a query to select from the database. Returns the rows in the database
-    result = db.session.execute(db.select(QC_data).order_by(QC_data.qc_name))
+    result = db.session.execute(db.select(QC_data).order_by(QC_data.id))
     # Use .scalars() to get the elements rather than entire rows from the database
     all_data = result.scalars()
     return render_template(

@@ -6,9 +6,17 @@
 
 {% block content %}
 <title>Upload new File</title>
-<h1>Upload new File</h1>
-<form method=post enctype=multipart/form-data>
-  <input type=file name=file>
-  <input type=submit value=Upload>
-</form>
+
+<div class="row">
+  <div class="col-md-2"></div>
+  <div class="col-md-8">
+    <h2 class="text-center" style="margin-top: 30px; margin-bottom: 30px;">Upload new File</h2>
+    <form class="text-center" margin-bottom: 10px;" method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+  </div>
+  <div class="col-md-2"></div>
+</div>
+
 {% endblock %}

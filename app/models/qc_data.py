@@ -1,5 +1,5 @@
 from app.extensions import db
-from sqlalchemy import Integer, String, Numeric
+from sqlalchemy import Integer, String, Numeric, PickleType
 from sqlalchemy.orm import Mapped, mapped_column
 from decimal import Decimal
 
@@ -14,6 +14,8 @@ class QC_data(db.Model):
     Energy: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     Dipole: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     Quadrupole: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
+    Vibrations: Mapped[bytes] = mapped_column(PickleType, nullable=False)
+    ES: Mapped[bytes] = mapped_column(PickleType, nullable=False)
 
     def __repr__(self) -> str:
         return f"QC_data(id={self.id!r}, qc_name={self.qc_name!r})"

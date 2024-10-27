@@ -33,6 +33,8 @@ def process_json(file_path):
             Energy=qc_data["SCF Energy"],
             Dipole=qc_data["Dipole"]["Tot"],
             Quadrupole=Q_pi,
+            Vibrations=qc_data["Vibrations"],
+            ES=qc_data["Excited States"],
         )
         db.session.add(data_to_add)
         try:

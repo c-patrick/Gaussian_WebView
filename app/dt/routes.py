@@ -16,6 +16,7 @@ def index():
 def data():
     # Define columns
     columns = [
+        ColumnDT(QC_data.id),
         ColumnDT(QC_data.qc_name),
         ColumnDT(QC_data.HOMO),
         ColumnDT(QC_data.LUMO),
