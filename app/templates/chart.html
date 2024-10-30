@@ -75,21 +75,25 @@
     options: {
       scales: {
         x: {
+          min: 0,
+          max: 4000,
           type: 'linear',
           position: 'bottom',
           title: {
             display: true,
-            text: 'Wavenumber (cm-1)'
+            text: 'Wavenumber (cm\u207B\u00B9)'
           },
           grid: {
             drawOnChartArea: true,
           },
+          reverse: true,
         },
         y: {
           title: {
             display: true,
             text: 'IR Intensity (a.u.)'
           },
+          reverse: true,
         },
       },
       elements: {
@@ -117,6 +121,16 @@
     <!-- Correct for plurality -->
     {% if data|length == 1 %}
     <h2 class="text-center" style="margin-top: 30px; margin-bottom: 10px;">UV-vis Spectrum</h2>
+    <div class="container">
+      <div class="row">
+          <div class="col-md-6 text-end">
+            <span><b>&lambda;<sub>max</sub>:</b> <span id="lambda"></span> nm</span>
+          </div>
+          <div class="col-md-6">
+            <span><b>&epsilon;<sub>max</sub>:</b> <span id="epsilon"></span> M<sup>-1</sup> cm<sup>-1</sup></span>
+          </div>
+      </div>
+    </div>
     {% else %}
     <h2 class="text-center" style="margin-top: 30px; margin-bottom: 10px;">UV-vis Spectra</h2>
     {% endif %}
@@ -131,7 +145,7 @@
   var zoomOptions = {
     limits: {
       x: {min: -20, max: 2000, minRange: 50},
-      y: {min: -1, max: 25, minRange: 5}
+      y: { min: -10, max: 500000, minRange: 5 }
     },
     pan: {
       enabled: true,
@@ -178,6 +192,7 @@
     options: {
       scales: {
         x: {
+          min: 0,
           type: 'linear',
           position: 'bottom',
           title: {
@@ -191,7 +206,7 @@
         y: {
           title: {
             display: true,
-            text: 'Oscillator Strength'
+            text: '\u03B5 (mol\u207B\u00B9 dm\u00B3 cm\u207B\u00B9)'
           },
         },
       },
@@ -208,7 +223,25 @@
 
   function resetZoom_ES() {
     ES_Chart.resetZoom();
+  };
+
+  {% if data|length == 1 %}
+  maxAbs();
+
+  function maxAbs () {
+    // console.log(ES_Chart.data.datasets[0].data); // for debugging
+
+    // Find the highest value for y and return the corresponding value for x. Result rounded to nearest integer.
+    const highest = ES_Chart.data.datasets[0].data.reduce((acc, item) => {
+      return item.y > acc.y ? { x: Math.round(item.x), y: Math.round(item.y) } : acc;
+    }, { x: null, y: -Infinity });
+
+    // console.log(highest); // for debugging
+
+    const lambda = document.getElementById('lambda').innerText = highest["x"];
+    const epsilon = document.getElementById('epsilon').innerText = highest["y"];
   }
+  {% endif %}
 </script>
 {% endif %}
 

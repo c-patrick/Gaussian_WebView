@@ -24,9 +24,54 @@ def prepare_data(data):
     # print(xy_data)
     return xy_labels, xy_data
 
-# TODO fix UV-vis maths
-def convolute(data, datatype="", npoints=1000, hwhm=0.1, broad="Gau", input_bins=False):
-    # from https://github.com/jcerezochem/analyze_spectra/
+
+def abs_max(f, lam, ref):
+    sd = 0.3  # Standard deviation
+    a = 1.3062974e8
+    b = f / (1e7 / 3099.6)
+    c = np.exp(-(((1 / ref - 1 / lam) / (1 / (1240 / sd))) ** 2))
+    return a * b * c
+
+
+def convoluteUV(data):
+    # from https://github.com/mdommett/compchem-scripts/blob/master/g09_spectrum.py
+    """
+    Make a Gaussian convolution of the UV-vis stick spectrum
+
+    Returns a list of dictionaries of x,y coordinates in format:
+    {'x': data, 'y': data}
+    """
+    # print(data) # for debugging
+
+    x = np.linspace(max(data["Wavelength"]) + 200, min(data["Wavelength"]) - 200, 1000)
+    sum = []
+
+    for ref in x:
+        tot = 0
+        for i in range(len(data["Wavelength"])):
+            tot += abs_max(data["Oscillator Strength"][i], data["Wavelength"][i], ref)
+        sum.append(tot)
+    stick_intensities = [
+        abs_max(
+            data["Oscillator Strength"][i], data["Wavelength"][i], data["Wavelength"][i]
+        )
+        for i in range(len(data["Wavelength"]))
+    ]
+    # print(f"SUM: {sum}")  # for debugging
+    # print(f"STICK INT: {stick_intensities}")  # for debugging
+
+    xy_data = []
+    for i in range(len(x)):
+        temp = {
+            "x": x[i],
+            "y": sum[i],
+        }
+        xy_data.append(temp)
+    return xy_data
+
+
+def convoluteIR(data, npoints=1000, hwhm=0.1, broad="Gau", input_bins=False):
+    # adapted from https://github.com/jcerezochem/analyze_spectra/
     """
     Make a Gaussian convolution of the stick spectrum
     The spectrum must be in energy(eV) vs Intens (LS?)
@@ -36,22 +81,16 @@ def convolute(data, datatype="", npoints=1000, hwhm=0.1, broad="Gau", input_bins
     npoints    int           number of points
     hwhm       float         half width at half maximum
 
-    Retunrs a list of dictionaries of x,y coordinates in format:
+    Returns a list of dictionaries of x,y coordinates in format:
     {'x': data, 'y': data}
     """
     xy_labels = []
     for x in data.keys():
         xy_labels.append(x)
-    if datatype == "UV":
-        # UV data extracted in reverse order
-        x = list(reversed(data[xy_labels[0]]))
-        y = list(reversed(data[xy_labels[1]]))
-        print(f"X Labels: {x}")
-    else:
-        x = data[xy_labels[0]]
-        y = data[xy_labels[1]]
-    print(x)
-    print(y)
+    x = data[xy_labels[0]]
+    y = data[xy_labels[1]]
+    # print(x) # for debugging
+    # print(y) # for debugging
 
     # ------------------------------------------------------------------------
     # Convert discrete sticks into a continuous function with an histogram
@@ -113,14 +152,6 @@ def convolute(data, datatype="", npoints=1000, hwhm=0.1, broad="Gau", input_bins
 
         extra_factor = extra_factor + 0.05
 
-        # For UV convolution
-        if datatype == "UV":
-            # Convert back linshape to intensity
-            yconv *= xconv
-            # Convert E[eV] to Wavelength[nm]
-            # xconv = xconv / 1.23981e-4  # eV->cm-1
-            # xconv = 1e7 / xconv  # cm-1 -> nm
-
         xy_data = []
         for i in range(len(xconv)):
             temp = {
@@ -160,8 +191,8 @@ def index():
         ES_data = None
         data_selected = db.get_or_404(QC_data, i)
         qc_name = data_selected.qc_name
-        IR_xy_labels, IR_data = convolute(data_selected.Vibrations, hwhm=7.5)
-        ES_xy_labels, ES_data = convolute(data_selected.ES, datatype="UV", hwhm=7.5)
+        IR_xy_labels, IR_data = convoluteIR(data_selected.Vibrations, hwhm=7.5)
+        ES_data = convoluteUV(data_selected.ES)
         data_to_add = {}
         data_to_add |= {'name': qc_name} # merge to dict
         # Logic to deal with cases where no IR or ES data is present
@@ -173,27 +204,6 @@ def index():
             data_flags["ES"] = True
         # Append data
         data.append(data_to_add)
-    print(data) # for debugging
+    # print(data) # for debugging
+    convoluteUV(data_selected.ES)
     return render_template("chart.html", data=data, flags=data_flags)
-
-# Old below:
-# @bp.route("/", methods=["GET", "POST"])
-# def index():
-#     # Get data type
-#     if request.method == "POST":
-#         pass
-#     # data_id = request.args["id"]
-#     data_id = 1
-#     labels = {}
-#     data = {}
-#     data_selected = db.get_or_404(QC_data, data_id)
-#     IR_xy_labels, IR_xy_data = convolute(data_selected.Vibrations, hwhm=7.5)
-#     ES_xy_labels, ES_xy_data = convolute(data_selected.ES, datatype="UV", hwhm=7.5)
-#     # Prepare data dict
-#     if IR_xy_data:
-#         data["IR"] = IR_xy_data
-#     if ES_xy_data:
-#         data["Excited States"] = ES_xy_data
-#     print(labels)
-#     print(data)
-#     return render_template("chart.html", data=data)
