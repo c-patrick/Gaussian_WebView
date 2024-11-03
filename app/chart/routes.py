@@ -6,27 +6,34 @@ from app.extensions import db
 from app.models.qc_data import QC_data
 
 
-def prepare_data(data):
-    xy_labels = []
-    # print(data)
-    for x in data.keys():
-        xy_labels.append(x)
-    # print(xy_labels)
-    x_list = data[xy_labels[0]]
-    y_list = data[xy_labels[1]]
-    xy_data = []
-    for i in range(len(x_list)):
-        temp = {
-            "x": x_list[i],
-            "y": y_list[i],
-        }
-        xy_data.append(temp)
-    # print(xy_data)
-    return xy_labels, xy_data
+# def prepare_data(data):
+#     """
+#     Takes 
+#     """
+#     xy_labels = []
+#     # print(data)
+#     for x in data.keys():
+#         xy_labels.append(x)
+#     # print(xy_labels)
+#     x_list = data[xy_labels[0]]
+#     y_list = data[xy_labels[1]]
+#     xy_data = []
+#     for i in range(len(x_list)):
+#         temp = {
+#             "x": x_list[i],
+#             "y": y_list[i],
+#         }
+#         xy_data.append(temp)
+#     # print(xy_data)
+#     return xy_labels, xy_data
 
 
-def abs_max(f, lam, ref):
-    sd = 0.3  # Standard deviation
+def abs_max(f, lam, ref, sd=0.3):
+    """
+    Calculates the absorption maximum for a given wavelength and energy.
+
+    sd: Standard Deviation (defaults to 0.3)
+    """
     a = 1.3062974e8
     b = f / (1e7 / 3099.6)
     c = np.exp(-(((1 / ref - 1 / lam) / (1 / (1240 / sd))) ** 2))

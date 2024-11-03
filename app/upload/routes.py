@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from app.upload import bp, allowed_file, process_json
 
 
+#TODO add processing of output files directly (incorporate https://github.com/c-patrick/Gaussian_Extractor)
 @bp.route("/", methods=["GET", "POST"])
 @login_required
 def index():
