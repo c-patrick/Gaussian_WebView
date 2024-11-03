@@ -21,5 +21,4 @@ The application is in very early stages of development
 ![image](https://github.com/user-attachments/assets/eaca21b3-ba68-4b07-a3e8-3a210481706d)
 
 ## User Management with roles
-![image](https://github.com/user-attachments/assets/74a4a025-c426-4dc7-83e5-5e02c365b0c6)
-
+![image](https://github.com/user-attachments/assets/dbe58fe9-0f3f-4cfb-8810-8d6e1736ab7d)
