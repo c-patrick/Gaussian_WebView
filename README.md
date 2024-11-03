@@ -1,5 +1,5 @@
 # Introduction
-Gaussian WebView is an application to process, store and visualise Gaussian computaitonal chemistrry data.
+Gaussian WebView is an application to process, store and visualise Gaussian computational chemistry data.
 
 The application is in very early stages of development
 
